@@ -1,0 +1,28 @@
+1. Put black-and-white video in "videos" directory.
+
+2. Run program to obtain gray images and put them in "gray_image_slices" directory.
+
+3. Run program to obtain color images and put them in "color_image_slices" directory.
+
+4. Combine gray images into a video (with frame rate 25 in this case) using: 
+ffmpeg -framerate 25 -i frame_%d.jpg -c:v libx264 -profile:v high -crf 20 -pix_fmt yuv420p output.mp4
+
+5. Extract audio from gray video using:
+ffmpeg -i joota_final.mp4 -codec:a libmp3lame -qscale:a 2 audio.mp3
+
+6. Merge audio with color video using:
+ffmpeg -i output.mp4 -i audio.mp3 -map 0 -map 1:a -c:v copy -shortest final.mkv
+
+7. Join both video side by side using:
+ffmpeg \
+  -i final.mkv \
+  -i joota_final.mp4 \
+  -filter_complex '[0:v]pad=iw*2:ih[int];[int][1:v]overlay=W/2:0[vid]' \
+  -map [vid] \
+  -c:v libx264 \
+  -crf 23 \
+  -preset veryfast \
+  sidebyside.mp4
+
+8. Add audio to joint video using:
+ffmpeg -i sidebyside.mp4 -i audio.mp3 -map 0 -map 1:a -c:v copy -shortest sidebyside_audio.mkv
